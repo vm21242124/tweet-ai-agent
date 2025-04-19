@@ -2,8 +2,8 @@ import express from "express";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { createPost } from "./mcp.tool.js";
-import { z } from "zod";
 import crypto from 'crypto';
+import { registerTools } from "./register.tools.js";
 
 const server = new McpServer({
     name: "example-server",
@@ -13,35 +13,10 @@ const server = new McpServer({
 const app = express();
 // app.use(express.json())
 
+registerTools(server);
 
-server.tool(
-    "addTwoNumbers",
-    "Add two numbers",
-    {
-        a: z.number(),
-        b: z.number()
-    },
-    async (arg) => {
-        const { a, b } = arg;
-        return {
-            content: [
-                {
-                    type: "text",
-                    text: `The sum of ${a} and ${b} is ${a + b}`
-                }
-            ]
-        }
-    }
-)
 
-server.tool(
-    "createPost",
-    "Create a post on X formally known as Twitter ", {
-    status: z.string()
-}, async (arg) => {
-    const { status } = arg;
-    return createPost(status);
-})
+
 app.use('/github-webhook', express.raw({ type: '*/*' }));
 
 
@@ -86,7 +61,7 @@ function verifySignature(req, res, next) {
   
       try {
         const tweet = await createPost(tweetText); // assuming this returns { data: ... }
-        console.log('✅ Tweet posted:', tweet.content.text);
+        console.log('✅ Tweet posted:', tweet.content[0].text);
       } catch (error) {
         console.error('❌ Error tweeting:', error);
       }
