@@ -48,6 +48,8 @@ function verifySignature(req, res, next) {
     const signature = req.get('x-hub-signature-256');
     const hmac = crypto.createHmac('sha256', GITHUB_SECRET);
     const digest = 'sha256=' + hmac.update(req.body).digest('hex');
+    console.log("verify signature");
+    
   
     if (signature !== digest) {
       return res.status(401).send('Signature mismatch');
@@ -59,12 +61,19 @@ function verifySignature(req, res, next) {
     } catch (e) {
       return res.status(400).send('Invalid JSON payload');
     }
+    console.log("verified");
+    
   
     next();
   }
   
   app.post('/github-webhook', verifySignature, async (req, res) => {
     const payload = req.body;
+
+    console.log("getting request from webhook");
+    console.log("payload",payload.toString());
+    
+    
   
     if (payload?.commits?.length) {
       const commit = payload.commits[0];
