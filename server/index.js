@@ -3,6 +3,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { createPost } from "./mcp.tool.js";
 import { z } from "zod";
+import crypto from 'crypto';
 
 const server = new McpServer({
     name: "example-server",
@@ -43,7 +44,26 @@ server.tool(
 })
 
 
-app.post('/github-webhook', async (req, res) => {
+function verifySignature(req, res, next) {
+    const signature = req.get('x-hub-signature-256');
+    const hmac = crypto.createHmac('sha256', GITHUB_SECRET);
+    const digest = 'sha256=' + hmac.update(req.body).digest('hex');
+  
+    if (signature !== digest) {
+      return res.status(401).send('Signature mismatch');
+    }
+  
+    // Convert raw body back to JSON so your handler can use req.body
+    try {
+      req.body = JSON.parse(req.body.toString());
+    } catch (e) {
+      return res.status(400).send('Invalid JSON payload');
+    }
+  
+    next();
+  }
+  
+  app.post('/github-webhook', verifySignature, async (req, res) => {
     const payload = req.body;
   
     if (payload?.commits?.length) {
@@ -55,8 +75,8 @@ app.post('/github-webhook', async (req, res) => {
       const tweetText = `🛠 New push to ${repo} by ${pusher}: "${message}"`;
   
       try {
-        await createPost(tweetText);
-        console.log('✅ Tweet posted:', tweet.data);
+        const tweet = await createPost(tweetText); // assuming this returns { data: ... }
+        console.log('✅ Tweet posted:', tweet.content.text);
       } catch (error) {
         console.error('❌ Error tweeting:', error);
       }
@@ -64,7 +84,6 @@ app.post('/github-webhook', async (req, res) => {
   
     res.sendStatus(200);
   });
-  
 
 
 const transports = {};
