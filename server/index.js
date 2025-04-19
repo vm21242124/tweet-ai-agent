@@ -42,6 +42,7 @@ server.tool(
     const { status } = arg;
     return createPost(status);
 })
+app.use('/github-webhook', express.raw({ type: '*/*' }));
 
 
 function verifySignature(req, res, next) {
