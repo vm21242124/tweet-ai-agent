@@ -10,7 +10,7 @@ const server = new McpServer({
 });
 
 const app = express();
-app.use(express.json())
+// app.use(express.json())
 
 
 server.tool(
@@ -55,7 +55,7 @@ app.post('/github-webhook', async (req, res) => {
       const tweetText = `🛠 New push to ${repo} by ${pusher}: "${message}"`;
   
       try {
-        const tweet = await twitterClient.v2.tweet(tweetText);
+        await createPost(tweetText);
         console.log('✅ Tweet posted:', tweet.data);
       } catch (error) {
         console.error('❌ Error tweeting:', error);
