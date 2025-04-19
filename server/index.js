@@ -46,7 +46,7 @@ server.tool(
 
 function verifySignature(req, res, next) {
     const signature = req.get('x-hub-signature-256');
-    const hmac = crypto.createHmac('sha256', GITHUB_SECRET);
+    const hmac = crypto.createHmac('sha256', process.env.GITHUB_SECRET);
     const digest = 'sha256=' + hmac.update(req.body).digest('hex');
     console.log("verify signature");
     
